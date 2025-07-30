@@ -1,28 +1,29 @@
 # Infraestrutura Web na AWS com Monitoramento Automatizado
-Este projeto consiste na criação de uma infraestrutura básica na AWS utilizando uma instância EC2 com Ubuntu, configuração de servidor web Nginx, e um script de monitoramento que envia alertas via Discord sempre que o site estiver fora do ar.
+Este projeto tem como objetivo criar um ambiente de servidor web na AWS com monitoramento automático, utilizando uma instância EC2 com Ubuntu, o servidor Nginx e um script que envia alertas para o Discord caso o site fique fora do ar.
 
 ## Etapas do Projeto
 
 ### 1. Criação da Instância EC2 na AWS
 ### VPC
-A VPC funciona como uma rede privada dentro da infraestrutura da AWS. Nela, foi definido um bloco CIDR de 10.0.0.0/16, o que oferece um amplo espaço de endereçamento IP, permitindo a criação de múltiplas sub-redes com diferentes finalidades.
+A VPC funciona como uma rede privada dentro da infraestrutura da AWS. Nela, foi definido um bloco CIDR de `10.0.0.0/16`, o que oferece um amplo espaço de endereçamento IP, permitindo a criação de múltiplas sub-redes com diferentes finalidades.
 
 ### Sub-redes públicas e privadas
-Dentro da VPC, foram criadas quatro sub-redes:
-- Duas Sub-redes públicas: utilizadas para hospedar recursos que precisam estar acessíveis pela internet, como a instância EC2 com o servidor web.
-- Duas Sub-Redes privadas: criadas para simular um ambiente mais seguro e realista, normalmente utilizadas para recursos internos, como bancos de dados ou serviços que não devem ser expostos diretamente à internet.
+Dentro dessa VPC, criei duas sub-redes públicas e duas privadas. As públicas são usadas para hospedar recursos com acesso à internet, como a instância EC2 que serve o site. As privadas ficam reservadas para simulações de ambientes internos mais seguros.
+
+Para criar uma sub-rede basta associar ela a uma VPC, escolher uma zona de disponibilidade (us-east-1a por exemplo), e configurar um bloco CIDR IPv4 para a sub-rede (10.0.1.0/24 por exemplo).
   
 ### Criação da instância EC2
-Dentro de uma das sub-redes públicas, foi criada uma instância do tipo t2.micro utilizando a imagem do Ubuntu Server 24.04. Essa instância serviu como nosso servidor web.
-
-### Autenticação com par de chaves
-Para garantir um acesso seguro à instância, foi gerado um par de chaves SSH no momento da criação da EC2. A chave privada (.pem) foi baixada e armazenada localmente. Ela é essencial para autenticar o acesso via terminal, funcionando como uma identidade digital.
+Com a VPC criada, criei uma instância EC2 usando a imagem Ubuntu Server 24.04, dentro de uma das sub-redes públicas. Escolhi o tipo t2.micro. No processo de criação, criei um novo par de chaves SSH e baixei o arquivo .pem, que é essencial para conectar à instância com segurança via terminal.
 
 ### Internet Gateway e Tabela de Rotas
-Para permitir que a sub-rede pública tivesse acesso à internet, foi criado e associado um Internet Gateway à VPC. Também foi configurada uma tabela de rotas direcionando o tráfego da sub-rede pública para o gateway, possibilitando a comunicação externa da instância EC2.
+Depois criei um Internet Gateway e associei ele à VPC. Isso é necessário para que as sub-redes públicas possam acessar a internet. Em seguida, editei a tabela de rotas padrão da VPC para direcionar o tráfego da sub-rede pública para o Internet Gateway recém-criado.
 
 ### Elastic IP
-Por padrão, o IP público de uma instância EC2 muda a cada reinicialização. Isso pode prejudicar o monitoramento do site e o acesso externo. Por esse motivo, foi associado um Elastic IP à instância, garantindo que o endereço IP permaneça fixo independentemente de reinicializações, mantendo o funcionamento consistente do sistema de monitoramento.
+Por padrão, o IP público de uma instância EC2 muda a cada reinicialização. Isso pode prejudicar o funcionamento do script de monitoramento, pois o IP utilizado no script de monitoramento pode mudar toda vez que a instância for reiniciada, causando falhas no envio de notificações.
+
+Para garantir que o IP público da instância EC2 seja fixo e não mude após reinicializações, criei e associei um Elastic IP à instância EC2. O Elastic IP é um IP público estático, fornecido pela AWS, que pode ser associado a qualquer instância EC2 e que permanecerá o mesmo, independentemente de reinicializações da instância.
+
+Para alocar um Elastic IP basta associar o grupo de borda de rede utilizado na sub-net na qual será utilizado o Elastic IP e após clicar em associar endereço IP Elástico e selecionar a instância na qual será utilizado o Elastic IP.
 
 Depois que todas as configurações aviam sido finalizadas foi possível acessar a EC2 na WSL por meio do comando.
 ```bash
@@ -36,19 +37,17 @@ sudo apt update
 sudo apt install nginx -y
 ```
 
-Após isso a criação de uma página HTML simples apenas para verificar se o site está funcionando.
+Para testar se estava funcionando, substituí o arquivo index.html padrão por uma página simples com a linha:
 
 ```bash
 echo "<h1>Servidor funcionando!</h1>" | sudo tee /var/www/html/index.html
 ```
 
-Com isso, o site passou a estar disponível via navegador usando o Elastic IP.
+Depois disso, acessei o Elastic IP pelo navegador e confirmei que a página aparecia normalmente.
 
 ### 3. Script de Monitoramento com Webhook do Discord
-Depois de garantir que o site está funcionando corretamente a próxima etapa era começar o desenvolvimento do script de monitoramento.
-Criei um script bash na pasta home do usuário que verifica, a cada minuto, se o site está no ar. Caso não esteja, envia uma notificação para um canal do Discord via Webhook e registra logs localmente.
+Na etapa seguinte, criei um script chamado `monitor.sh` dentro do diretório /home/ubuntu. Esse script faz uma verificação a cada minuto no site. Se ele estiver fora do ar, o script envia um alerta para um canal do Discord utilizando um webhook, e também salva logs no arquivo /var/log/meuScript.log. O conteúdo do script ficou assim:
 
-#### Script Criado:
 ```bash
 #!/bin/bash
 
@@ -80,21 +79,25 @@ fi
 ```
 
 ### 4. Agendamento 
-Depois da criação do script era necessário configurar o agendamento pra verificação do servidor a cada minuto.
-Para isso foi utilizado o comando `crontab` por meio do comando:
+Depois de tornar o script executável com o comando `chmod +x monitor.sh`, adicionei a execução automática usando o comando:
 ```bash
 crontab -e
 ```
 E adicionado a linha de comando:
 ```bash
-*/1 * * * * /home/ubuntu/monitor.sh
+* * * * * /home/ubuntu/monitor.sh
 ```
+
+Isso garante que o script roda a cada minuto.
 
 ### 5. Conclusão
 Após todos os processos realizados o script de monitoramento doi testado e apresentou o comportamento esperado:
-- Quando o site está fora do ar, o script envia uma mensagem de alerta para o canal do Discord configurado via webhook.
+
+Para testar, parei o Nginx usando `sudo systemctl stop nginx` e aguardei. Logo recebi a mensagem de alerta no Discord informando que o site estava fora do ar.
+
 ![print](imagens/alertas-script.png)
-- As mensagens tanto de funcionamento quanto de erro são armazenadas localmente no arquivo de log (meuScript.log).
+
+Ao reiniciar o Nginx com `sudo systemctl start nginx`, percebe-se que o arquivo também está em seu funcionamento correto e registrando as mensagens.
 
 ![print](imagens/mensagens-log.png)
 
