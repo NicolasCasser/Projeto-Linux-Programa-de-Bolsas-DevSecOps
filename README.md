@@ -23,7 +23,7 @@ Por padrão, o IP público de uma instância EC2 muda a cada reinicialização. 
 
 Para garantir que o IP público da instância EC2 seja fixo e não mude após reinicializações, criei e associei um Elastic IP à instância EC2. O Elastic IP é um IP público estático, fornecido pela AWS, que pode ser associado a qualquer instância EC2 e que permanecerá o mesmo, independentemente de reinicializações da instância.
 
-Para alocar um Elastic IP basta associar ao mesmo grupo de borda de rede utilizado na sub-rede associada a EC2 na qual será utilizado o Elastic IP e após isso clicar em associar endereço IP Elástico e selecionar a instância na qual será utilizado o Elastic IP.
+Para alocar um Elastic IP, vá até "Endereços IP Elásticos" no console EC2, clique em "Alocar endereço IP Elástico" e confirme. Depois, clique em "Ações" > "Associar endereço IP Elástico", selecione a instância EC2 desejada e confirme a associação.
 
 Depois que todas as configurações haviam sido finalizadas foi possível acessar a EC2 na WSL por meio do comando.
 ```bash
@@ -75,7 +75,7 @@ then
         curl -H "Content-Type: application/json" \
                 -X POST \
                 -d "{\"content\": \"$MENSAGEM\"}" \
-                "$URL_WEBHOOK"
+                "$WEBHOOK"
 
 else
         MENSAGEM="$DATA - Site funcionando"
