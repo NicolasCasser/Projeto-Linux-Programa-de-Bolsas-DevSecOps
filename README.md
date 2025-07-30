@@ -1,5 +1,5 @@
 # Infraestrutura Web na AWS com Monitoramento Automatizado
-Este projeto tem como objetivo criar um ambiente de servidor web na AWS com monitoramento automático, utilizando uma instância EC2 com Ubuntu, o servidor Nginx e um script que envia alertas para o Discord caso o site fique fora do ar.
+Este projeto tem como objetivo criar um ambiente de servidor web na AWS com monitoramento automático, utilizando uma instância EC2 com Ubuntu, um servidor Nginx e um script que envia alertas para o Discord caso o site fique fora do ar.
 
 ## Etapas do Projeto
 
@@ -23,9 +23,9 @@ Por padrão, o IP público de uma instância EC2 muda a cada reinicialização. 
 
 Para garantir que o IP público da instância EC2 seja fixo e não mude após reinicializações, criei e associei um Elastic IP à instância EC2. O Elastic IP é um IP público estático, fornecido pela AWS, que pode ser associado a qualquer instância EC2 e que permanecerá o mesmo, independentemente de reinicializações da instância.
 
-Para alocar um Elastic IP basta associar o grupo de borda de rede utilizado na sub-net na qual será utilizado o Elastic IP e após clicar em associar endereço IP Elástico e selecionar a instância na qual será utilizado o Elastic IP.
+Para alocar um Elastic IP basta associar ao mesmo grupo de borda de rede utilizado na sub-rede associada a EC2 na qual será utilizado o Elastic IP e após isso clicar em associar endereço IP Elástico e selecionar a instância na qual será utilizado o Elastic IP.
 
-Depois que todas as configurações aviam sido finalizadas foi possível acessar a EC2 na WSL por meio do comando.
+Depois que todas as configurações haviam sido finalizadas foi possível acessar a EC2 na WSL por meio do comando.
 ```bash
 ssh -i chaveseguranca.pem ubuntu@elasticip
 ```
@@ -47,8 +47,11 @@ Depois disso, acessei o Elastic IP pelo navegador e confirmei que a página apar
 
 ![print](imagens/imagem-site.png)
 
-### 3. Script de Monitoramento com Webhook do Discord
-Na etapa seguinte, criei um script chamado `monitor.sh` dentro do diretório /home/ubuntu. Esse script faz uma verificação a cada minuto no site. Se ele estiver fora do ar, o script envia um alerta para um canal do Discord utilizando um webhook, e também salva logs no arquivo /var/log/meuScript.log. O conteúdo do script ficou assim:
+### 3. Webhook do Discord
+Para que o script consiga enviar alertas, é necessário criar um webhook do Discord, que serve como ponto de comunicação entre o servidor e o canal de notificação. Para isso, criei um servidor no Discord e após isso cliquei na opção de Editar canal. Em seguida, acessei a aba Integrações e cliquei em Webhooks. Selecionei Novo Webhook, escolhi um nome para ele ("monitoramento"), e copiei a URL do webhook gerada. 
+
+### 4. Script de Monitoramento
+Na etapa seguinte, criei um script chamado `monitor.sh` dentro do diretório /home/ubuntu. Esse script faz uma verificação a cada minuto no site. Se ele estiver fora do ar, o script envia um alerta para o canal do Discord utilizando o webhook, e também salva logs no arquivo /var/log/meuScript.log. O conteúdo do script ficou assim:
 
 ```bash
 #!/bin/bash
@@ -80,7 +83,7 @@ else
 fi
 ```
 
-### 4. Agendamento 
+### 5. Agendamento 
 Depois de tornar o script executável com o comando `chmod +x monitor.sh`, adicionei a execução automática usando o comando:
 ```bash
 crontab -e
@@ -90,16 +93,16 @@ E adicionado a linha de comando:
 * * * * * /home/ubuntu/monitor.sh
 ```
 
-Isso garante que o script roda a cada minuto.
+Isso garante que o script rode a cada minuto.
 
-### 5. Conclusão
-Após todos os processos realizados o script de monitoramento doi testado e apresentou o comportamento esperado:
+### 6. Conclusão
+Após todos os processos realizados o script de monitoramento foi testado e apresentou o comportamento esperado:
 
 Para testar, parei o Nginx usando `sudo systemctl stop nginx` e aguardei. Logo recebi a mensagem de alerta no Discord informando que o site estava fora do ar.
 
 ![print](imagens/alertas-script.png)
 
-Ao reiniciar o Nginx com `sudo systemctl start nginx`, percebe-se que o arquivo também está em seu funcionamento correto e registrando as mensagens.
+Ao reiniciar o Nginx com `sudo systemctl start nginx`, percebe-se que o arquivo .log também está em seu funcionamento correto e registrando as mensagens.
 
 ![print](imagens/mensagens-log.png)
 
