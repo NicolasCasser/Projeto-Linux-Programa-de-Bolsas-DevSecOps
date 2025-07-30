@@ -95,5 +95,6 @@ Após todos os processos realizados o script de monitoramento doi testado e apre
 - Quando o site está fora do ar, o script envia uma mensagem de alerta para o canal do Discord configurado via webhook.
 ![print](imagens/alertas-script.png)
 - As mensagens tanto de funcionamento quanto de erro são armazenadas localmente no arquivo de log (meuScript.log).
+
 ![print](imagens/mensagens-log.png)
 
