@@ -45,6 +45,8 @@ echo "<h1>Servidor funcionando!</h1>" | sudo tee /var/www/html/index.html
 
 Depois disso, acessei o Elastic IP pelo navegador e confirmei que a página aparecia normalmente.
 
+![print](imagens/imagem-site.png)
+
 ### 3. Script de Monitoramento com Webhook do Discord
 Na etapa seguinte, criei um script chamado `monitor.sh` dentro do diretório /home/ubuntu. Esse script faz uma verificação a cada minuto no site. Se ele estiver fora do ar, o script envia um alerta para um canal do Discord utilizando um webhook, e também salva logs no arquivo /var/log/meuScript.log. O conteúdo do script ficou assim:
 
