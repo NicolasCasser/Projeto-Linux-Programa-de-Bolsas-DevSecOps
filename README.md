@@ -85,7 +85,7 @@ Para isso foi utilizado o comando `crontab` por meio do comando:
 ```bash
 crontab -e
 ```
-E adicionado comando:
+E adicionado a linha de comando:
 ```bash
 */1 * * * * /home/ubuntu/monitor.sh
 ```
