@@ -8,12 +8,16 @@ Este projeto tem como objetivo criar um ambiente de servidor web na AWS com moni
 A VPC funciona como uma rede privada dentro da infraestrutura da AWS. Nela, foi definido um bloco CIDR de `10.0.0.0/16`, o que oferece um amplo espaço de endereçamento IP, permitindo a criação de múltiplas sub-redes com diferentes finalidades.
 
 ### Sub-redes públicas e privadas
-Dentro dessa VPC, criei duas sub-redes públicas e duas privadas. As públicas são usadas para hospedar recursos com acesso à internet, como a instância EC2 que serve o site. As privadas ficam reservadas para simulações de ambientes internos mais seguros.
+Uma sub-rede é uma divisão dentro de uma VPC usada para organizar e isolar recursos com base em regras de rede, como o alcance de IPs e o acesso à internet.
+Ela funciona como um "bloco" separado dentro da rede principal, permitindo definir onde seus servidores ficam e controlar o que cada um pode acessar.
+
+Dentro da VPC, criei duas sub-redes públicas e duas privadas. As públicas são usadas para hospedar recursos com acesso à internet, como a instância EC2 que serve o site. As privadas ficam reservadas para simulações de ambientes internos mais seguros.
 
 Para criar uma sub-rede basta associar ela a uma VPC, escolher uma zona de disponibilidade (us-east-1a por exemplo), e configurar um bloco CIDR IPv4 para a sub-rede (10.0.1.0/24 por exemplo).
   
 ### Criação da instância EC2
-Com a VPC criada, criei uma instância EC2 usando a imagem Ubuntu Server 24.04, dentro de uma das sub-redes públicas. Escolhi o tipo t2.micro. No processo de criação, criei um novo par de chaves SSH e baixei o arquivo .pem, que é essencial para conectar à instância com segurança via terminal.
+Com a VPC pronta, criei uma instância EC2, que é uma máquina virtual na nuvem da AWS que funciona como um servidor remoto. Utilizei a imagem Ubuntu Server 24.04 e aloquei a instância em uma das sub-redes públicas, garantindo que tivesse acesso à internet.
+Escolhi o tipo t2.micro, que é elegível ao plano gratuito da AWS. Durante a criação, também gerei um novo par de chaves SSH e baixei o arquivo .pem, necessário para realizar conexões seguras via terminal.
 
 ### Internet Gateway e Tabela de Rotas
 Depois criei um Internet Gateway e associei ele à VPC. Isso é necessário para que as sub-redes públicas possam acessar a internet. Em seguida, editei a tabela de rotas padrão da VPC para direcionar o tráfego da sub-rede pública para o Internet Gateway recém-criado.
